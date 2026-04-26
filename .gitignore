@@ -9,4 +9,4 @@ __pycache__/
 venv/
 hardhat/cache/
 hardhat/artifacts/
-*.log
+*.logservices/edge-service/edge-service
