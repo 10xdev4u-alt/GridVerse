@@ -1,0 +1,21 @@
+rule "peak-shed-residential" {
+  when: demand > 0.85 * capacity
+        AND time.hour IN [17..21]
+        AND meter.profile == "residential"
+  action: shed(percent: 10, duration: 30m)
+  priority: 2
+}
+
+rule "critical-protect" {
+  when: meter.profile == "hospital"
+        OR meter.profile == "datacenter"
+  action: protect()
+  priority: 0
+}
+
+rule "curtail-solar-overload" {
+  when: production > capacity * 1.1
+        AND meter.profile == "solar-panel"
+  action: curtail(percent: 20)
+  priority: 3
+}
