@@ -10,3 +10,4 @@ venv/
 artifacts/
 cache/
 *.logservices/edge-service/edge-service
+*.exe
