@@ -1,0 +1,154 @@
+services:
+  nats:
+    image: nats:2.10-alpine
+    container_name: smartgrid-nats
+    command: ["-js"]
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    networks:
+      - smartgrid
+    restart: unless-stopped
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: smartgrid-timescaledb
+    environment:
+      POSTGRES_USER: smartgrid
+      POSTGRES_PASSWORD: smartgrid
+      POSTGRES_DB: smartgrid
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+      - ./infra/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smartgrid -d smartgrid"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - smartgrid
+    restart: unless-stopped
+
+  api-gateway:
+    build: ./services/api-gateway
+    container_name: smartgrid-api
+    environment:
+      NATS_URL: "nats://nats:4222"
+      DB_URL: "postgres://smartgrid:smartgrid@timescaledb:5432/smartgrid?sslmode=disable"
+      PORT: "8080"
+    ports:
+      - "8080:8080"
+    depends_on:
+      nats:
+        condition: service_started
+      timescaledb:
+        condition: service_healthy
+    networks:
+      - smartgrid
+    restart: unless-stopped
+
+  edge-service:
+    build: ./services/edge-service
+    container_name: smartgrid-edge
+    environment:
+      EDGE_ID: "edge-001"
+      NATS_URL: "nats://nats:4222"
+    depends_on:
+      - nats
+    networks:
+      - smartgrid
+    restart: unless-stopped
+
+  dsl-engine:
+    build: ./services/dsl-engine
+    container_name: smartgrid-dsl
+    environment:
+      NATS_URL: "nats://nats:4222"
+      RULES_FILE: "/rules/default.rules"
+      EVAL_INTERVAL: "5"
+      DRY_RUN: "false"
+    volumes:
+      - ./services/dsl-engine/default.rules:/rules/default.rules
+    depends_on:
+      - nats
+    networks:
+      - smartgrid
+    restart: unless-stopped
+
+  blockchain-bridge:
+    build: ./services/blockchain-bridge
+    container_name: smartgrid-bridge
+    environment:
+      NATS_URL: "nats://nats:4222"
+      DB_URL: "postgres://smartgrid:smartgrid@timescaledb:5432/smartgrid?sslmode=disable"
+    depends_on:
+      - nats
+      - timescaledb
+    networks:
+      - smartgrid
+    restart: unless-stopped
+
+  eda-engine:
+    build: ./services/eda-engine
+    container_name: smartgrid-eda
+    environment:
+      NATS_URL: "nats://nats:4222"
+      DB_URL: "postgres://smartgrid:smartgrid@timescaledb:5432/smartgrid?sslmode=disable"
+      FORECAST_INTERVAL: "300"
+    depends_on:
+      - nats
+      - timescaledb
+    networks:
+      - smartgrid
+    restart: unless-stopped
+
+  meter-simulator:
+    build: ./services/meter-simulator
+    environment:
+      NATS_URL: "nats://nats:4222"
+      INTERVAL_MS: "1000"
+    depends_on:
+      - nats
+    networks:
+      - smartgrid
+    restart: unless-stopped
+    deploy:
+      replicas: 10
+      restart_policy:
+        condition: on-failure
+
+  hardhat:
+    image: node:20-alpine
+    container_name: smartgrid-hardhat
+    working_dir: /app
+    volumes:
+      - ./blockchain:/app
+    command: ["sh", "-c", "npm install && npx hardhat node --hostname 0.0.0.0"]
+    ports:
+      - "8545:8545"
+    networks:
+      - smartgrid
+
+  dashboard:
+    build: ./dashboard
+    container_name: smartgrid-dashboard
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:8080"
+      NEXT_PUBLIC_WS_URL: "ws://localhost:8080/ws"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api-gateway
+    networks:
+      - smartgrid
+    restart: unless-stopped
+
+networks:
+  smartgrid:
+    driver: bridge
+
+volumes:
+  timescaledb_data:
