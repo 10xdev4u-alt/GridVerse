@@ -156,7 +156,7 @@ func main() {
 	capacity := 100.0
 
 	// Subscribe to meter readings to build state
-	nc.Subscribe("meter.>.readings", func(msg *nats.Msg) {
+	nc.Subscribe("meter.*.readings", func(msg *nats.Msg) {
 		var r Reading
 		if err := json.Unmarshal(msg.Data, &r); err != nil { return }
 		mu.Lock()

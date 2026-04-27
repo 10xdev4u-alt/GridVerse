@@ -84,7 +84,7 @@ func main() {
 	maxQueue := 1000
 
 	// Subscribe to meter readings
-	nc.Subscribe("meter.>.readings", func(msg *nats.Msg) {
+	nc.Subscribe("meter.*.readings", func(msg *nats.Msg) {
 		var r Reading
 		if err := json.Unmarshal(msg.Data, &r); err != nil {
 			log.Printf("Failed to unmarshal reading: %v", err)
@@ -96,7 +96,7 @@ func main() {
 	})
 
 	// Subscribe to commands (log and forward)
-	nc.Subscribe("meter.>.commands", func(msg *nats.Msg) {
+	nc.Subscribe("meter.*.commands", func(msg *nats.Msg) {
 		var cmd Command
 		if err := json.Unmarshal(msg.Data, &cmd); err != nil {
 			log.Printf("Failed to unmarshal command: %v", err)

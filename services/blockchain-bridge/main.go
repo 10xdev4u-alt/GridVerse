@@ -66,7 +66,7 @@ func main() {
 	var mu sync.Mutex
 
 	// Subscribe to meter readings to detect surplus/deficit
-	nc.Subscribe("meter.>.readings", func(msg *nats.Msg) {
+	nc.Subscribe("meter.*.readings", func(msg *nats.Msg) {
 		var r Reading
 		if err := json.Unmarshal(msg.Data, &r); err != nil { return }
 
