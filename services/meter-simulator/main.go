@@ -326,7 +326,7 @@ func (s *Simulator) run() error {
 
 func main() {
 	cfg := loadConfig()
-	sim := &Simulator{cfg: cfg}
+	sim := NewSimulator(cfg, nil) // Use the constructor to initialize RNG
 
 	if err := sim.run(); err != nil {
 		log.Fatalf("[%s] Fatal error: %v", cfg.MeterID, err)

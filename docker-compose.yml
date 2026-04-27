@@ -1,3 +1,5 @@
+name: smart-grid
+
 services:
   nats:
     image: nats:2.10-alpine
@@ -34,6 +36,7 @@ services:
 
   api-gateway:
     build: ./services/api-gateway
+    image: smartgrid/api-gateway
     container_name: smartgrid-api
     environment:
       NATS_URL: "nats://nats:4222"
@@ -52,6 +55,7 @@ services:
 
   edge-service:
     build: ./services/edge-service
+    image: smartgrid/edge-service
     container_name: smartgrid-edge
     environment:
       EDGE_ID: "edge-001"
@@ -64,6 +68,7 @@ services:
 
   dsl-engine:
     build: ./services/dsl-engine
+    image: smartgrid/dsl-engine
     container_name: smartgrid-dsl
     environment:
       NATS_URL: "nats://nats:4222"
@@ -80,6 +85,7 @@ services:
 
   blockchain-bridge:
     build: ./services/blockchain-bridge
+    image: smartgrid/blockchain-bridge
     container_name: smartgrid-bridge
     environment:
       NATS_URL: "nats://nats:4222"
@@ -93,6 +99,7 @@ services:
 
   eda-engine:
     build: ./services/eda-engine
+    image: smartgrid/eda-engine
     container_name: smartgrid-eda
     environment:
       NATS_URL: "nats://nats:4222"
@@ -107,6 +114,7 @@ services:
 
   meter-simulator:
     build: ./services/meter-simulator
+    image: smartgrid/meter-simulator
     environment:
       NATS_URL: "nats://nats:4222"
       INTERVAL_MS: "1000"
@@ -134,6 +142,7 @@ services:
 
   dashboard:
     build: ./dashboard
+    image: smartgrid/dashboard
     container_name: smartgrid-dashboard
     environment:
       NEXT_PUBLIC_API_URL: "http://localhost:8080"

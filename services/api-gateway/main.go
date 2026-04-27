@@ -111,7 +111,7 @@ func main() {
 }
 
 func setupNATSSubscriptions() {
-	nc.Subscribe("meter.>.readings", func(msg *nats.Msg) {
+	nc.Subscribe("meter.*.readings", func(msg *nats.Msg) {
 		var r Reading
 		if err := json.Unmarshal(msg.Data, &r); err != nil {
 			return

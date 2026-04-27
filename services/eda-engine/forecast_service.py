@@ -77,7 +77,7 @@ async def main():
             if result:
                 data = json.dumps(result).encode()
                 await nc.publish("forecast.demand", data)
-                print(f"Published forecast: {result}")
+                print(f"Published forecast: {result}", flush=True)
             await asyncio.sleep(INTERVAL)
 
     asyncio.create_task(forecast_loop())

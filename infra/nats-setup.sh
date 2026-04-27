@@ -7,7 +7,7 @@ done
 
 # Create JetStream streams
 nats stream add --server nats://nats:4222 METER_READINGS \
-  --subjects "meter.>.readings" \
+  --subjects "meter.*.readings" \
   --storage file \
   --retention limits \
   --max-age 1h \
